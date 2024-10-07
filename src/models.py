@@ -14,9 +14,10 @@ class User(db.Model):
 
     def serialize(self):
         return {
+            "username": self.username,
             "id": self.id,
             "email": self.email,
-            # do not serialize the password, its a security breach
+            "is_active": self.is_active,
         }
 
 class Characters(db.Model):
@@ -76,8 +77,8 @@ class FavoritesCharacters(db.Model):
             "id": self.id,
             "user_id": self.user_id,
             "username": self.user.username if self.user else None,
-            "people_id": self.people_id,
-            "poeple_name": self.people.name if self.people else None
+            "character_id": self.character_id,
+            "character_name": self.character.name if self.character else None
         }
     
 class FavoritesPlanets(db.Model):

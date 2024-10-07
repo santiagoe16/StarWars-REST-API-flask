@@ -69,7 +69,7 @@ def delete_user(user_id):
     db.session.delete(delete_user)
     db.session.commit()
 
-    return jsonify({"message": f"usuario {name_user.username} fue eliminado con exito"}), 201
+    return jsonify({"message": f"usuario {name_user.username} fue eliminado con exito"}), 200
 
 
 @app.route('/characters', methods=['GET'])
@@ -90,7 +90,7 @@ def get_character(character_id):
 def post_characters():
     new_character = request.get_json()
 
-    new_character = Characters(name = new_character["name"],gender = new_character["gender"],eye_color = new_character["eye_color"],hair_color = new_character["hair_color"])
+    new_character = Characters(name = new_character["name"],gender = new_character["gender"],birth_year = new_character["birth_year"],hair_color = new_character["hair_color"])
 
     db.session.add(new_character)
     db.session.commit()
@@ -105,7 +105,7 @@ def delete_character(character_id):
     db.session.delete(delete_character)
     db.session.commit()
 
-    return jsonify({"message": f"character {character_name.name} fue eliminado con exito"}), 201
+    return jsonify({"message": f"character {character_name.name} fue eliminado con exito"}), 200
 
 
 @app.route('/planets', methods=['GET'])
@@ -141,7 +141,69 @@ def delete_planet(planet_id):
     db.session.delete(delete_planet)
     db.session.commit()
 
-    return jsonify({"message": f"planeta {planet_name.name} fue eliminado con exito"}), 201
+    return jsonify({"message": f"planeta {planet_name.name} fue eliminado con exito"}), 200
+
+@app.route('/users/<int:user_id>/favorites', methods=['GET'])
+def get_favorites(user_id):
+    
+    favorites_character = FavoritesCharacters.query.filter_by(user_id = user_id).all()
+    favorites_planet = FavoritesPlanets.query.filter_by(user_id = user_id).all()
+
+    favorites = {
+        "characters": list(map(lambda character: character.serialize(),favorites_character)),
+        "planets": list(map(lambda planet: planet.serialize(),favorites_planet))
+    }
+
+    return jsonify(favorites), 200
+
+
+@app.route('/users/<int:user_id>/favorites/characters/<int:character_id>', methods=['POST'])
+def add_favorite_character(user_id,character_id):
+    user = User.query.filter_by(id = user_id).first()
+    character_name = Characters.query.filter_by(id = character_id).first()
+    
+    favorite = FavoritesCharacters(user_id = user_id, character_id = character_id)
+
+    db.session.add(favorite)
+    db.session.commit()
+
+    return jsonify({"message": f"character {character_name.name} added to favorites with success in the username {user.username}"}), 201
+
+@app.route('/users/<int:user_id>/favorites/characters/<int:character_id>', methods=['DELETE'])
+def delete_favorite_character(user_id,character_id):
+    user = User.query.filter_by(id = user_id).first()
+    character_name = Characters.query.filter_by(id = character_id).first()
+    
+    favorite =  FavoritesCharacters.query.filter_by(user_id = user_id,character_id = character_id).first()
+
+    db.session.delete(favorite)
+    db.session.commit()
+
+    return jsonify({"message": f" character {character_name.name} successfully removed from favorites in the user {user.username} "}), 200
+
+@app.route('/users/<int:user_id>/favorites/planets/<int:planet_id>', methods=['POST'])
+def add_favorite_planet(user_id,planet_id):
+    user = User.query.filter_by(id = user_id).first()
+    planet_name = Planets.query.filter_by(id = planet_id).first()
+    
+    favorite = FavoritesPlanets(user_id = user_id, planet_id = planet_id)
+
+    db.session.add(favorite)
+    db.session.commit()
+
+    return jsonify({"message": f"planet {planet_name.name} added to favorites with success in the username {user.username}"}), 201
+
+@app.route('/users/<int:user_id>/favorites/planets/<int:planet_id>', methods=['DELETE'])
+def delete_favorite_planet(user_id,planet_id):
+    user = User.query.filter_by(id = user_id).first()
+    planet_name = Planets.query.filter_by(id = planet_id).first()
+    
+    favorite =  FavoritesPlanets.query.filter_by(user_id = user_id,planet_id = planet_id).first()
+
+    db.session.delete(favorite)
+    db.session.commit()
+
+    return jsonify({"message": f" planet {planet_name.name} successfully deleted from favorites in the user {user.username} "}), 200
 
 
 # this only runs if `$ python src/app.py` is executed
